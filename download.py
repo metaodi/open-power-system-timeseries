@@ -295,7 +295,6 @@ def download(session, source, resource, p, start, end):
             else:
                 password = getpass.getpass('Please enter the beta-user password:')
 
-            password = getpass.getpass('Please enter the beta-user password:')
             resp = session.get(p['url_template'], auth=('beta', password))
             original_filename = p['url_template'].split('/')[-1]
         else:

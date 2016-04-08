@@ -512,7 +512,7 @@ def write_sql():
         f = 'timeseries' + res_key
         ds = data_set.copy()
         ds.index = ds.index.strftime('%Y-%m-%dT%H:%M:%SZ')
-        ds.to_sql(f, sqlite3.connect(f + '.sqlite'),
+        ds.to_sql(f, sqlite3.connect('data.sqlite'),
                   if_exists='replace', index_label='timestamp')
     return
 write_sql()
@@ -529,7 +529,7 @@ def write_excel():
                                    data_sets_multiindex.items()):
         f = 'timeseries' + res_key
         data_set.to_excel(f+ '.xlsx', float_format='%.2f')
-write_excel()
+# write_excel()
 
 
 # ## 5.3 Write to CSV
@@ -545,7 +545,7 @@ def write_csv():
         f = 'timeseries' + res_key
         data_set.to_csv(f + '.csv', float_format='%.2f',
                         date_format='%Y-%m-%dT%H:%M:%SZ')
-write_csv()
+# write_csv()
 
 
 # # 6. Plausibility checks

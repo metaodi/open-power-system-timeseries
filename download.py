@@ -284,7 +284,10 @@ def download(session, source, resource, p, start, end):
     count_files =  len(os.listdir(container))   
     if count_files == 0:
         if source == 'OPSD':
-            password = getpass.getpass('Please enter the beta-user password:')
+            if 'MORPH_OPSD_BETA_PW' in os.environ:
+                password = os.environ['MORPH_OPSD_BETA_PW']
+            else:
+                password = getpass.getpass('Please enter the beta-user password:')
             resp = session.get(p['url_template'], auth=('beta', password))
             original_filename = p['url_template'].split('/')[-1]
         else:

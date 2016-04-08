@@ -14,20 +14,20 @@
 # # Table of Contents
 # * [1. Read](#1.-Read)
 # * [2. Preparations](#2.-Preparations)
-#       * [2.1 Libraries](#2.1-Libraries)
-#       * [2.2 Set up a log.](#2.2-Set-up-a-log.)
-#       * [2.3 Locate the download directory](#2.3-Locate-the-download-directory)
-#       * [2.4 Set the level names of the MultiIndex](#2.4-Set-the-level-names-of-the-MultiIndex)
+# 	* [2.1 Libraries](#2.1-Libraries)
+# 	* [2.2 Set up a log.](#2.2-Set-up-a-log.)
+# 	* [2.3 Locate the download directory](#2.3-Locate-the-download-directory)
+# 	* [2.4 Set the level names of the MultiIndex](#2.4-Set-the-level-names-of-the-MultiIndex)
 # * [3. read-functions for individual data sources](#3.-read-functions-for-individual-data-sources)
-#       * [3.1 ENTSO-E](#3.1-ENTSO-E)
-#       * [3.2 '50Hertz](#3.2-'50Hertz)
-#       * [3.3 Amprion](#3.3-Amprion)
-#       * [3.4 TenneT](#3.4-TenneT)
-#       * [3.5 TransnetBW](#3.5-TransnetBW)
-#       * [3.6 Capacities](#3.6-Capacities)
+# 	* [3.1 ENTSO-E](#3.1-ENTSO-E)
+# 	* [3.2 '50Hertz](#3.2-'50Hertz)
+# 	* [3.3 Amprion](#3.3-Amprion)
+# 	* [3.4 TenneT](#3.4-TenneT)
+# 	* [3.5 TransnetBW](#3.5-TransnetBW)
+# 	* [3.6 Capacities](#3.6-Capacities)
 # * [4. Read files one by one](#4.-Read-files-one-by-one)
-#       * [4.1 Create empty DataFrames](#4.1-Create-empty-DataFrames)
-#       * [4.2 Apply the processing function one-by-one](#4.2-Apply-the-processing-function-one-by-one)
+# 	* [4.1 Create empty DataFrames](#4.1-Create-empty-DataFrames)
+# 	* [4.2 Apply the processing function one-by-one](#4.2-Apply-the-processing-function-one-by-one)
 # * [5. Write the data to disk for further processing](#5.-Write-the-data-to-disk-for-further-processing)
 # 
 
@@ -37,7 +37,7 @@
 
 # Loading some python libraries.
 
-# In[ ]:
+# In[1]:
 
 from datetime import datetime, date, timedelta
 import pytz
@@ -50,7 +50,7 @@ import logging
 
 # ## 2.2 Set up a log.
 
-# In[ ]:
+# In[2]:
 
 logger = logging.getLogger('log')
 logger.setLevel('INFO')
@@ -64,7 +64,7 @@ logger.setLevel('INFO')
 # for example:
 # * \datapackage_timeseries\original_data\TransnetBW\wind\2010-01-01_2010-01-31\mwindeinsp_ist_prognose_2010_01.csv
 
-# In[ ]:
+# In[3]:
 
 downloadpath = 'original_data'
 
@@ -73,7 +73,7 @@ downloadpath = 'original_data'
 
 # These are the rows at the top of the data used to store metadata internally. In the output data created by the processing script ([local copy](processing.ipynb#) / [GitHub](https://github.com/Open-Power-System-Data/datapackage_timeseries/blob/master/processing.ipynb)), this information will be moved to the [datapackage.json](datapackage.json#) File.
 
-# In[ ]:
+# In[4]:
 
 HEADERS = ['variable', 'country', 'attribute', 'source', 'web']
 
@@ -82,7 +82,7 @@ HEADERS = ['variable', 'country', 'attribute', 'source', 'web']
 
 # ## 3.1 ENTSO-E
 
-# In[ ]:
+# In[5]:
 
 def read_entso(filepath, web):
     df = pd.read_excel(
@@ -142,7 +142,7 @@ def read_entso(filepath, web):
 
 # ## 3.2 '50Hertz
 
-# In[ ]:
+# In[6]:
 
 def read_hertz(filepath, tech_attribute, web):
     tech = tech_attribute.split('_')[0]
@@ -187,7 +187,7 @@ def read_hertz(filepath, tech_attribute, web):
 
 # ## 3.3 Amprion
 
-# In[ ]:
+# In[7]:
 
 def read_amprion(filepath, tech, web):
     df = pd.read_csv(
@@ -239,7 +239,7 @@ def read_amprion(filepath, tech, web):
 # 
 # This index can be used to compute a timestamp. However, there are a couple of errors in the data, which is why a lot of exceptions need to be specified.
 
-# In[ ]:
+# In[8]:
 
 def read_tennet(filepath, tech, web):
     df = pd.read_csv(
@@ -335,7 +335,7 @@ def read_tennet(filepath, tech, web):
 
 # ## 3.5 TransnetBW
 
-# In[ ]:
+# In[9]:
 
 def read_transnetbw(filepath, tech, web):
     df = pd.read_csv(
@@ -376,7 +376,7 @@ def read_transnetbw(filepath, tech, web):
 
 # ## 3.6 Capacities
 
-# In[ ]:
+# In[10]:
 
 def read_capacities(filepath, web):
     df = pd.read_csv(
@@ -418,7 +418,7 @@ def read_capacities(filepath, web):
 
 # We create a dictionary with an empty DataFrame each for data with 15/60 minute resolution. This line deletes all data previously loaded into the data_sets.
 
-# In[ ]:
+# In[11]:
 
 data_sets = {'15min': pd.DataFrame(), '60min': pd.DataFrame()}
 
@@ -430,7 +430,7 @@ data_sets = {'15min': pd.DataFrame(), '60min': pd.DataFrame()}
 
 # This section contains a python dictionary indicating which datasources there are, which data types they provide and a link to the source to be included in the columnd header.
 
-# In[ ]:
+# In[12]:
 
 conf = """
 60min:
@@ -457,7 +457,7 @@ conf = """
 conf = yaml.load(conf)
 
 
-# In[ ]:
+# In[13]:
 
 for resolution, sources in conf.items():
     for source, resources in sources.items():
@@ -505,7 +505,7 @@ for resolution, sources in conf.items():
 
 # # 5. Write the data to disk for further processing
 
-# In[ ]:
+# In[14]:
 
 for resolution, data_set in data_sets.items():
     data_set.to_csv('raw_data_' + resolution + '.csv', float_format='%.2f')

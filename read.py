@@ -433,24 +433,7 @@ data_sets = {'15min': pd.DataFrame(), '60min': pd.DataFrame()}
 # In[ ]:
 
 conf = """
-60min:
-    ENTSO-E:
-        load: https://www.entsoe.eu/data/data-portal/consumption/Pages/default.aspx #Hourly load values of all countries for a specific month
 15min:
-    50Hertz: 
-        wind_generation: http://www.50hertz.com/en/Grid-Data/Wind-power/Archive-Wind-power
-        wind_forecast: http://www.50hertz.com/en/Grid-Data/Wind-power/Archive-Wind-power
-        solar_generation: http://www.50hertz.com/en/Grid-Data/Photovoltaics/Archive-Photovoltaics
-        solar_forecast: http://www.50hertz.com/en/Grid-Data/Photovoltaics/Archive-Photovoltaics
-    Amprion:
-        wind: http://www.amprion.net/en/wind-feed-in
-        solar: http://www.amprion.net/en/photovoltaic-infeed
-    TenneT:
-        wind: http://www.tennettso.de/site/en/Transparency/publications/network-figures/actual-and-forecast-wind-energy-feed-in
-        solar: http://www.tennettso.de/site/en/Transparency/publications/network-figures/actual-and-forecast-photovoltaic-energy-feed-in
-    TransnetBW:
-        wind: https://www.transnetbw.com/en/key-figures/renewable-energies/wind-infeed
-        solar: https://www.transnetbw.com/en/key-figures/renewable-energies/photovoltaic
     OPSD:
         capacities: http://data.open-power-system-data.org/datapackage_renewables/
 """

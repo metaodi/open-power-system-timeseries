@@ -248,7 +248,8 @@ OPSD:
 
 # In[ ]:
 
-conf = yaml.load(hertz + amprion + tennet + transnetbw + entso + opsd)
+# conf = yaml.load(hertz + amprion + tennet + transnetbw + entso + opsd)
+conf = yaml.load(opsd)
 
 
 # In the following we iterate over the sources and resources (load/wind/solar, forecast/generation/capacity) specified above and download the data for a the period given in the parameters. Each file is saved under it's original filename. Note that the original file names are often not self-explanatory (called "data" or "January"). The files content is revealed by its place in the directory structure.

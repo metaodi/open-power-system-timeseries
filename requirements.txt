@@ -7,3 +7,8 @@
 
 lxml==3.4.4
 cssselect==0.9.1
+pandas==0.18.0rc1
+requests==2.9.1
+numpy==1.10.4
+pycountry==1.20
+PyYAML==3.11

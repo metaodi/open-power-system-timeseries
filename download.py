@@ -253,7 +253,7 @@ OPSD:
 
 # In[ ]:
 
-datasets_to_download = hertz
+datasets_to_download = hertz + amprion + tennet + transnetbw + entso + opsd
 
 conf = yaml.load(datasets_to_download)
 

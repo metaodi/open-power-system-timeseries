@@ -11,11 +11,12 @@ log = logging.getLogger(__name__)
 
 # import lxml.html
 
+scripts = ["download.py", "read.py", "processing.py"]
 
 try:
-    subprocess.check_call("{python} download.py".format(python=os.path.join(sys.prefix, "bin", "python")), shell=True)
-    subprocess.check_call("{python} read.py".format(python=os.path.join(sys.prefix, "bin", "python")), shell=True)
-    subprocess.check_call("{python} processing.py".format(python=os.path.join(sys.prefix, "bin", "python")), shell=True)
+    for script in scripts:
+        log.info("Now running: {}".format(script))
+        subprocess.check_call("{python} {script}".format(python=os.path.join(sys.prefix, "bin", "python"), script=script), shell=True)
 except subprocess.CalledProcessError as e:
     log.error("%s failed" % e.cmd)
     sys.exit(e.returncode)

@@ -67,7 +67,7 @@ HEADERS = ['variable', 'country', 'attribute', 'source', 'web']
 # In[ ]:
 
 data_sets = {}
-for res_key in ['15min']:
+for res_key in ['15min', '60min']:
     data_sets[res_key] = pd.read_csv(
         'raw_data_' + res_key + '.csv',
         header=[0, 1, 2, 3, 4],
@@ -491,7 +491,7 @@ def write_sql():
     return
 
 
-get_ipython().magic('time write_sql()')
+write_sql()
 
 
 # ## 5.2 Write to Excel
@@ -507,7 +507,7 @@ def write_excel():
         data_set.to_excel(f + '.xlsx', float_format='%.2f')
 
 
-get_ipython().magic('time write_excel()')
+write_excel()
 
 
 # ## 5.3 Write to CSV
@@ -525,22 +525,22 @@ def write_csv():
                         date_format='%Y-%m-%dT%H:%M:%SZ')
 
 
-get_ipython().magic('time write_csv()')
+write_csv()
 
 # # 6. Plausibility checks
 
-# work in progress
-
-# In[ ]:
-
-pv = compact.xs(('solar'), level=('variable'), axis=1, drop_level=False)
-pv.index = pd.MultiIndex.from_arrays([pv.index.date, pv.index.time], names=['date', 'time'])
-pv
-
-# In[ ]:
-
-pv.groupby(level='time').max()
-
-# In[ ]:
-
-pv.unstack().idxmax().to_frame().unstack().transpose()
+# # work in progress
+#
+# # In[ ]:
+#
+# pv = compact.xs(('solar'), level=('variable'), axis=1, drop_level=False)
+# pv.index = pd.MultiIndex.from_arrays([pv.index.date, pv.index.time], names=['date', 'time'])
+# pv
+#
+# # In[ ]:
+#
+# pv.groupby(level='time').max()
+#
+# # In[ ]:
+#
+# pv.unstack().idxmax().to_frame().unstack().transpose()

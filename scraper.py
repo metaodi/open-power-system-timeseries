@@ -1,6 +1,7 @@
 # This is a template for a Python scraper on morph.io (https://morph.io)
 # including some code snippets below that you should find helpful
 
+import os
 import scraperwiki
 import subprocess
 import sys
@@ -10,10 +11,11 @@ log = logging.getLogger(__name__)
 
 # import lxml.html
 
+
 try:
-    subprocess.check_call("python download.py", shell=True)
-    subprocess.check_call("python read.py", shell=True)
-    subprocess.check_call("python processing.py", shell=True)
+    subprocess.check_call("{python} download.py".format(python=os.path.join(sys.prefix, "bin", "python")), shell=True)
+    subprocess.check_call("{python} read.py".format(python=os.path.join(sys.prefix, "bin", "python")), shell=True)
+    subprocess.check_call("{python} processing.py".format(python=os.path.join(sys.prefix, "bin", "python")), shell=True)
 except subprocess.CalledProcessError as e:
     log.error("%s failed" % e.cmd)
     sys.exit(e.returncode)

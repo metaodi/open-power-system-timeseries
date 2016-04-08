@@ -14,7 +14,7 @@ try:
     subprocess.check_call("python download.py", shell=True)
     subprocess.check_call("python read.py", shell=True)
     subprocess.check_call("python processing.py", shell=True)
-except subprocess.CalledProcessError, e:
+except subprocess.CalledProcessError as e:
     log.error("%s failed" % e.cmd)
     sys.exit(e.returncode)
 

@@ -1,2 +1,7 @@
 data.sqlite
 hackday
+original_data
+
+*.csv
+*.idea
+

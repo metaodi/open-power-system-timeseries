@@ -1,4 +1,3 @@
-
 # coding: utf-8
 
 # # 1. Processing
@@ -50,7 +49,6 @@ import copy
 from itertools import chain
 import logging
 
-
 # ## 2.2 Set up a log.
 
 # In[ ]:
@@ -58,6 +56,9 @@ import logging
 logger = logging.getLogger('log')
 logger.setLevel('INFO')
 
+# In[ ]:
+
+HEADERS = ['variable', 'country', 'attribute', 'source', 'web']
 
 # ## 2.3 Load raw data
 
@@ -66,13 +67,13 @@ logger.setLevel('INFO')
 # In[ ]:
 
 data_sets = {}
-for res_key in ['15min', '60min']:
+for res_key in ['15min']:
     data_sets[res_key] = pd.read_csv(
         'raw_data_' + res_key + '.csv',
-        header=[0,1,2,3,4],
+        header=[0, 1, 2, 3, 4],
         index_col=0,
         parse_dates=True
-        )
+    )
 
 
 # # 3. Own calculations
@@ -105,7 +106,7 @@ def patcher(frame):
         nan_regs['start_idx'] = df.index[df['tag'] & ~ df['tag'].shift(1).fillna(False)]
 
         # last row of consecutive region is a False preceded by a True   
-        nan_regs['till_idx'] = df.index[df['tag'] & ~ df['tag'].shift(-1).fillna(False)] 
+        nan_regs['till_idx'] = df.index[df['tag'] & ~ df['tag'].shift(-1).fillna(False)]
 
         if not df['tag'].any():
             logger.info('%s : nothing to patch in this column', col_name[0:3])
@@ -118,7 +119,7 @@ def patcher(frame):
             nan_regs['count'] = (nan_regs['span'] / one_period)
             # sort the info DF to put longest missing region on top
             nan_regs = nan_regs.sort_values('count', ascending=False).reset_index(drop=True)
-            
+
             df.drop('tag', axis=1, inplace=True)
             nan_list = nan_regs.stack().to_frame()
             nan_list.columns = df.columns
@@ -132,36 +133,37 @@ def patcher(frame):
                                     'up-to-2-hour-spans of NaNs',
                                     col_name[0:3], i + 1 - j)
                     to_fill = slice(row['start_idx'] - one_period,
-                                     row['till_idx'] + one_period)
-                    df.iloc[:,0].loc[to_fill] = df.iloc[:,0].loc[to_fill].interpolate()
+                                    row['till_idx'] + one_period)
+                    df.iloc[:, 0].loc[to_fill] = df.iloc[:, 0].loc[to_fill].interpolate()
 
                 # guess missing value spans longer than one hour based on other tsos
                 elif col_name[1][:2] == 'DE' and col_name[2] == 'generation':
                     j += 1
-#                    logger.info('guessed %s entries after %s', row['count'], row['start_idx'])
+                    #                    logger.info('guessed %s entries after %s', row['count'], row['start_idx'])
                     day_before = pd.DatetimeIndex(freq='15min',
                                                   start=row['start_idx'] - timedelta(hours=24),
                                                   end=row['start_idx'] - one_period)
 
                     to_fill = pd.DatetimeIndex(freq='15min',
-                                                start=row['start_idx'],
-                                                end=row['till_idx'])
+                                               start=row['start_idx'],
+                                               end=row['till_idx'])
 
                     # other_tsos = [c[1] for c in compact.drop(col_name, axis=1).loc[:,(col_name[0],slice(None),col_name[2])].columns.tolist()]
-                    other_tsos = [tso for tso in ['DE50hertz', 'DEamprion', 'DEtennet', 'DEtransnetbw'] if tso != col_name[1]]
-                    
+                    other_tsos = [tso for tso in ['DE50hertz', 'DEamprion', 'DEtennet', 'DEtransnetbw'] if
+                                  tso != col_name[1]]
+
                     # select columns with data for same technology (wind/solar) but from other TSOs
-                    similar = frame.loc[:,(col_name[0],other_tsos,col_name[2])]
+                    similar = frame.loc[:, (col_name[0], other_tsos, col_name[2])]
                     # calculate the sum using columns without NaNs the day 
                     # before or during the period to be guessed
                     similar = similar.dropna(axis=1, how='any', subset=day_before.append(to_fill)).sum(axis=1)
                     # calculate scaling factor for other TSO data
-                    factor =  similar.loc[day_before].sum(axis=0) / df.loc[day_before,:].sum(axis=0)
-                    
+                    factor = similar.loc[day_before].sum(axis=0) / df.loc[day_before, :].sum(axis=0)
+
                     guess = similar.loc[to_fill] / float(factor)
-                    df.iloc[:,0].loc[to_fill] = guess
-                    a = float(df.iloc[:,0].loc[row['start_idx'] - one_period])
-                    b = float(df.iloc[:,0].loc[row['start_idx']])
+                    df.iloc[:, 0].loc[to_fill] = guess
+                    a = float(df.iloc[:, 0].loc[row['start_idx'] - one_period])
+                    b = float(df.iloc[:, 0].loc[row['start_idx']])
                     if a == 0:
                         deviation = '{} absolut'.format(a - b)
                     else:
@@ -170,9 +172,9 @@ def patcher(frame):
                                 'guessed %s entries after %s \n        '
                                 'last non-missing: %s \n        '
                                 'first guessed: %s \n        '
-                                'deviation of first guess from last known value: %s', 
+                                'deviation of first guess from last known value: %s',
                                 col_name[0:3], row['count'], row['start_idx'],
-                                a, b, deviation)                  
+                                a, b, deviation)
 
         if len(nan_table) == 0:
             nan_table = nan_list
@@ -183,7 +185,7 @@ def patcher(frame):
             patched = df
         else:
             patched = patched.combine_first(df)
-            
+
     nan_table.columns.names = HEADERS
     patched.columns.names = HEADERS
 
@@ -195,7 +197,7 @@ def patcher(frame):
 # In[ ]:
 
 patched, nan_table = patcher(data_sets['15min'])
-#nan_table#.loc[(slice(None),['count','start_idx']),:]
+# nan_table#.loc[(slice(None),['count','start_idx']),:]
 
 
 # Execute this to see whether there is still missing data. This is the case for some of the forecast columns.
@@ -203,8 +205,7 @@ patched, nan_table = patcher(data_sets['15min'])
 # In[ ]:
 
 patched2, nan_table2 = patcher(patched)
-nan_table2.loc[(slice(None),['count','start_idx']),:]
-
+nan_table2.loc[(slice(None), ['count', 'start_idx']), :]
 
 # Execute this to see an example of where the data has been patched.
 
@@ -212,11 +213,9 @@ nan_table2.loc[(slice(None),['count','start_idx']),:]
 
 data_sets['15min'].loc['2015-10-24 23:00:00':'2015-10-25 03:00:00', 'wind']
 
-
 # In[ ]:
 
 patched.loc['2015-10-24 23:00:00':'2015-10-25 03:00:00', 'wind']
-
 
 # Replace the untreated data set with the patched one.
 
@@ -224,14 +223,9 @@ patched.loc['2015-10-24 23:00:00':'2015-10-25 03:00:00', 'wind']
 
 data_sets['15min'] = patched
 
-
 # ## 3.2 Aggregate German data from individual TSOs
 
 # The wind and solar in-feed data for the 4 German balancing areas is summed up and stored in in new columns, which are then used to calculate profiles, that is, the share of wind/solar capacity producing at a given time. The column headers are created in the fashion introduced in the read script.
-
-# In[ ]:
-
-HEADERS = ['variable', 'country', 'attribute', 'source', 'web']
 
 
 # In[ ]:
@@ -246,13 +240,13 @@ for tech in ['wind', 'solar']:
                 sum_col = add_col
             else:
                 sum_col = sum_col + add_col.values
-                
+
         # Create a new MultiIndex
         tuples = [(tech, 'DE', attribute, 'own calculation', web)]
         columns = pd.MultiIndex.from_tuples(tuples, names=HEADERS)
         sum_col.columns = columns
         data_sets['15min'] = data_sets['15min'].combine_first(sum_col)
-        
+
         # Calculate the profile column
         if attribute == 'generation':
             profile_col = sum_col.values / data_sets['15min'][tech, 'DE', 'capacity']
@@ -261,13 +255,11 @@ for tech in ['wind', 'solar']:
             profile_col.columns = columns
             data_sets['15min'] = data_sets['15min'].combine_first(profile_col)
 
-
 # New columns for the aggregated data have been added to the 15 minutes dataset.
 
 # In[ ]:
 
 data_sets['15min']
-
 
 # ## 3.3 Create hourly data from 15' data
 
@@ -278,13 +270,11 @@ data_sets['15min']
 resampled = data_sets['15min'].resample('H').mean()
 data_sets['60min'] = data_sets['60min'].combine_first(resampled)
 
-
 # New columns for the resampled data have been added to the 60 minutes dataset.
 
 # In[ ]:
 
 data_sets['60min']
-
 
 # # 4. Create metadata
 
@@ -300,48 +290,48 @@ metadata = {
     'name': 'opsd-timeseries',
     'title': 'Time-series data: load, wind and solar, prices',
     'description': 'This data package contains different kinds of timeseries '
-        'data relevant for power system modelling. Currently, the data '
-        'includes hourly electricity consumption (load) for 36 European '
-        'countries, wind and solar power generation from German transmission '
-        'system operators for every quarter hour, and daily wind and solar '
-        'capacity data. We use '
-        'this data to calculate Germany-wide renewables in-feed and profile '
-        'timeseries. We plan to include more data sources in the future. '
-        'While some of the wind in-feed data dates back to '
-        '2005, the full dataset is only available from 2012 onwards. The '
-        'data has been downloaded from the sources, resampled and merged in '
-        'a large CSV file with hourly resolution. Additionally, the data '
-        'available at a higher resolution (German renewables in-feed, 15 '
-        'minutes) is provided in a separate file. All data processing is '
-        'conducted in python and pandas and has been documented in the '
-        'Jupyter notebooks linked below.',
+                   'data relevant for power system modelling. Currently, the data '
+                   'includes hourly electricity consumption (load) for 36 European '
+                   'countries, wind and solar power generation from German transmission '
+                   'system operators for every quarter hour, and daily wind and solar '
+                   'capacity data. We use '
+                   'this data to calculate Germany-wide renewables in-feed and profile '
+                   'timeseries. We plan to include more data sources in the future. '
+                   'While some of the wind in-feed data dates back to '
+                   '2005, the full dataset is only available from 2012 onwards. The '
+                   'data has been downloaded from the sources, resampled and merged in '
+                   'a large CSV file with hourly resolution. Additionally, the data '
+                   'available at a higher resolution (German renewables in-feed, 15 '
+                   'minutes) is provided in a separate file. All data processing is '
+                   'conducted in python and pandas and has been documented in the '
+                   'Jupyter notebooks linked below.',
     'opsd-jupyter-notebook-url': 'https://github.com/Open-Power-System-Data/'
-        'datapackage_timeseries/blob/master/main.ipynb',
+                                 'datapackage_timeseries/blob/master/main.ipynb',
     'version': '2016-03-30',
     'opsd-changes-to-last-version': 'Added missing data handling to patch '
-        'gaps in the data from German TSOs',
+                                    'gaps in the data from German TSOs',
     'keywords': [
-        'timeseries','electricity','in-feed','capacity','renewables', 'wind',
-        'solar','load','tso','europe','germany'
-        ],
+        'timeseries', 'electricity', 'in-feed', 'capacity', 'renewables', 'wind',
+        'solar', 'load', 'tso', 'europe', 'germany'
+    ],
     'geographical-scope': 'Europe/Germany',
     'licenses': [{
         'url': 'http://example.com/license/url/here',
         'version': '1.0',
         'name': 'License Name Here',
         'id': 'license-id-from-open'
-        }],
+    }],
     'views': [{}],
     'sources': [{
         'name': 'See the "Source" column in the field documentation'
-        }],
+    }],
     'maintainers': [{
         'web': 'http://example.com/',
         'name': 'Jonathan Muehlenpfordt',
         'email': 'muehlenpfordt@neon-energie.de'
-        }],
-    'resources': [{ # The following is an example of how the file-specific metadata is 
-        'path': 'path_to.csv', # structured. The actual metadata is created below
+    }],
+    'resources': [{  # The following is an example of how the file-specific metadata is
+        'path': 'path_to.csv',  # structured. The actual metadata is created below
         'format': 'csv',
         'mediatype': 'text/csv',
         'schema': {
@@ -352,22 +342,22 @@ metadata = {
                 'source': {
                     'name': 'Example',
                     'web': 'http://www.example.com'
-                    },
+                },
                 'opsd-properties': {
                     'Country': 'AT',
                     'Variable': 'load',
-                    }
-                }]
-            }
-        }]
-    }
+                }
+            }]
+        }
+    }]
+}
 
 indexfield = {
     'name': 'timestamp',
     'description': 'Start of timeperiod in UTC',
     'type': 'datetime',
     'format': 'YYYY-MM-DDThh:mm:ssZ'
-    }
+}
 
 descriptions = {
     'load': 'Consumption in {geo} in MW',
@@ -376,8 +366,7 @@ descriptions = {
     'capacity': '{tech} capacity in {geo} in MW',
     'profile': 'Share of {tech} capacity producing in {geo}',
     'offshoreshare': '{tech} actual offshore generation in {geo} in MW'
-    }
-
+}
 
 # ## 4.2 Columns-specific metadata
 
@@ -387,10 +376,10 @@ descriptions = {
 
 # In[ ]:
 
-data_sets_singleindex = copy.deepcopy(data_sets)##########################
+data_sets_singleindex = copy.deepcopy(data_sets)  ##########################
 resources = []
 for res_key, data_set in data_sets.items():
-    columns_singleindex = [] ####################
+    columns_singleindex = []  ####################
     fields = [indexfield]
     for col in data_set.columns:
         h = {k: v for k, v in zip(HEADERS, col)}
@@ -403,18 +392,18 @@ for res_key, data_set in data_sets.items():
         else:
             geo = pycountry.countries.get(alpha2=h['country']).name
 
-        field = {}    
+        field = {}
         field['description'] = descriptions[h['attribute']].format(
             tech=h['variable'], geo=geo)
         field['type'] = 'number'
         field['source'] = {
             'name': h['source'],
             'web': h['web']
-            }
+        }
         field['opsd-properties'] = {
             'Country': h['country'],
             'Variable': h['variable'],
-            }
+        }
         components = [h['variable'], h['country']]
         if not h['variable'] == 'load':
             components.append(h['attribute'])
@@ -422,45 +411,44 @@ for res_key, data_set in data_sets.items():
         field['name'] = '_'.join(components)
         columns_singleindex.append(field['name'])
         fields.append(field)
-        
+
     resource = {
         'path': 'timeseries' + res_key + '.csv',
         'format': 'csv',
         'mediatype': 'text/csv',
         'alternative_formats': [
-        {
-          'path': 'timeseries' + res_key + '.csv',
-          'stacking': 'Singleindex',
-          'format': 'csv'
-        },
-        {
-          'path': 'timeseries' + res_key + '.xlsx',
-          'stacking': 'Singleindex',
-          'format': 'xlsx'
-        },
-        {
-          'path': 'timeseries' + res_key + '_multiindex.xlsx',
-          'stacking': 'Multiindex',
-          'format': 'xlsx'
-        },
-        {
-          'path': 'timeseries' + res_key + '_multiindex.csv',
-          'stacking': 'Multiindex',
-          'format': 'csv'
-        },
-        {
-          'path': 'timeseries' + res_key + '_stacked.csv',
-          'stacking': 'Stacked',
-          'format': 'csv'
-        }
-      ],        
+            {
+                'path': 'timeseries' + res_key + '.csv',
+                'stacking': 'Singleindex',
+                'format': 'csv'
+            },
+            {
+                'path': 'timeseries' + res_key + '.xlsx',
+                'stacking': 'Singleindex',
+                'format': 'xlsx'
+            },
+            {
+                'path': 'timeseries' + res_key + '_multiindex.xlsx',
+                'stacking': 'Multiindex',
+                'format': 'xlsx'
+            },
+            {
+                'path': 'timeseries' + res_key + '_multiindex.csv',
+                'stacking': 'Multiindex',
+                'format': 'csv'
+            },
+            {
+                'path': 'timeseries' + res_key + '_stacked.csv',
+                'stacking': 'Stacked',
+                'format': 'csv'
+            }
+        ],
         'schema': {'fields': fields}
-        }       
+    }
     resources.append(resource)
-    data_sets_singleindex[res_key].columns = columns_singleindex ###############
-    
-metadata['resources'] = resources
+    data_sets_singleindex[res_key].columns = columns_singleindex  ###############
 
+metadata['resources'] = resources
 
 # Execute this to write the metadata to disk
 
@@ -469,7 +457,6 @@ metadata['resources'] = resources
 datapackage_json = json.dumps(metadata, indent=2, separators=(',', ': '))
 with open('datapackage.json', 'w') as f:
     f.write(datapackage_json)
-
 
 # # 5. Write the data to disk
 
@@ -481,7 +468,7 @@ data_sets_multiindex = {}
 data_sets_stacked = {}
 for res_key in ['15min', '60min']:
     data_sets_multiindex[res_key + '_multiindex'] = data_sets[res_key]
-    
+
     stacked = data_sets[res_key].copy()
     stacked.columns = stacked.columns.droplevel(['source', 'web'])
     stacked = stacked.transpose().stack(dropna=True).to_frame(name='data')
@@ -502,6 +489,8 @@ def write_sql():
         ds.to_sql(f, sqlite3.connect(f + '.sqlite'),
                   if_exists='replace', index_label='timestamp')
     return
+
+
 get_ipython().magic('time write_sql()')
 
 
@@ -515,7 +504,9 @@ def write_excel():
     for res_key, data_set in chain(data_sets_singleindex.items(),
                                    data_sets_multiindex.items()):
         f = 'timeseries' + res_key
-        data_set.to_excel(f+ '.xlsx', float_format='%.2f')
+        data_set.to_excel(f + '.xlsx', float_format='%.2f')
+
+
 get_ipython().magic('time write_excel()')
 
 
@@ -532,8 +523,9 @@ def write_csv():
         f = 'timeseries' + res_key
         data_set.to_csv(f + '.csv', float_format='%.2f',
                         date_format='%Y-%m-%dT%H:%M:%SZ')
-get_ipython().magic('time write_csv()')
 
+
+get_ipython().magic('time write_csv()')
 
 # # 6. Plausibility checks
 
@@ -542,16 +534,13 @@ get_ipython().magic('time write_csv()')
 # In[ ]:
 
 pv = compact.xs(('solar'), level=('variable'), axis=1, drop_level=False)
-pv.index = pd.MultiIndex.from_arrays([pv.index.date, pv.index.time], names=['date','time'])
+pv.index = pd.MultiIndex.from_arrays([pv.index.date, pv.index.time], names=['date', 'time'])
 pv
-
 
 # In[ ]:
 
 pv.groupby(level='time').max()
 
-
 # In[ ]:
 
 pv.unstack().idxmax().to_frame().unstack().transpose()
-

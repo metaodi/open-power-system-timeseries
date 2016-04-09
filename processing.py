@@ -59,10 +59,17 @@ HEADERS = ['variable', 'country', 'attribute', 'source', 'web']
 # ## 2.2 Set up a log.
 
 # In[13]:
+console = logging.StreamHandler()
+console.setLevel(logging.INFO)
+# set a format which is simpler for console use
+formatter = logging.Formatter('%(name)-12s: %(levelname)-8s %(message)s')
+# tell the handler to use this format
+console.setFormatter(formatter)
 
-logger = logging.getLogger('log')
+# add the handler to the root logger
+logger = logging.getLogger('')
 logger.setLevel('INFO')
-
+logger.addHandler(console)
 
 # ## 2.3 Load raw data
 
